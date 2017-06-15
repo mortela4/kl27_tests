@@ -8,6 +8,16 @@
 //#include "mcu.h"
 
 #include "board.h"
+#include "flash_cmds.h"
+#include "fsl_debug_console.h"
+
+/*
+#define FW_IMG_1_ADDR	0x6000
+#define FW_IMG_2_ADDR	0xB000
+*/
+
+volatile uint8_t gImgNum = 0;
+
 
 void _JumpToUserApplication(unsigned long userSP, unsigned long userStartup)
 {
@@ -33,14 +43,93 @@ void JumpToUserApplication(unsigned long reloadVector)
 	return;	// NOTE: never to be reached ...
 }
 
-int CheckApplicationReady(unsigned long reloadVector)
+bool CheckApplicationReady(unsigned long reloadVector)
 {
 	unsigned long *p = (unsigned long *)reloadVector;
 	if(*(p + 8) != 0xffffffff)
 	{
-		return 1;
+		return true;
 	}
-	return 0;
+	return false;
 }
+
+
+// Dummy
+bool ResetBySW(void)
+{
+	return true;
+}
+
+// Dummy: must be replaced by XModem-over-UDP updater.
+bool RunFwUpdate(bool emulateFailure)
+{
+	if ( emulateFailure )
+		return false;
+	else
+		return true;
+}
+
+
+void StartFirmware(void)
+{
+	uint32_t fwStartAddr = FW_OFFSET + (gImgNum - 1)*FW_SZ ;
+
+	if ( CheckApplicationReady() == false )
+	{
+		PRINTF("\r\nNo valid firmware - cannot start!\r\n");
+
+		return;	// TODO: assess - do action here?
+	}
+
+	JumpToUserApplication(fwStartAddr);
+}
+
+void CheckResetCause(void)
+{
+   bool switchImgNum = false;
+
+   if ( ResetBySW() )
+   {
+      switchImgNum = RunFwUpdate();
+   }
+   // Set ImgNum to current(=false) or new(=true) FW:
+   SetBootImage(switchImgNum);
+
+   StartFirmware();   // Start application.
+}
+
+
+uint32_t GetBootImage(void)
+{
+	return (uint32_t)*(CONFIG_START);
+}
+
+
+void SetBootImage(bool switchImage)
+{
+	gImgNum = GetBootImage();	// From Flash.
+
+   // Illegal image-number?
+   if (gImgNum == 0 || gImgNum > 2)
+	   gImgNum = 1;
+
+   // Set StartAddr - TODO: check if ==1||==2 first!
+   if ( switchImage )
+   {
+	   // imgNum = (imgNum & 0x03) ^ 0x03;   // XOR 2LSBs
+	   // TODO: simplify!
+	   if (gImgNum==1)
+		   gImgNum = 2;
+	   else
+		   gImgNum = 1;
+   }
+
+   auto gFwStartAddr = FW_OFFSET + (gImgNum - 1)*FW_SZ;
+
+   PRINTF("Image addr set to: 0x%08X", FW_START_ADDR);
+}
+
+
+
 
 

@@ -71,6 +71,7 @@ static int32_t LedControl(p_shell_context_t context, int32_t argc, char **argv);
 static int32_t FlashWriteCmd(p_shell_context_t context, int32_t argc, char **argv);
 static int32_t FlashReadCmd(p_shell_context_t context, int32_t argc, char **argv);
 static int32_t BootAppCmd(p_shell_context_t context, int32_t argc, char **argv);
+static int32_t UpdateCmd(p_shell_context_t context, int32_t argc, char **argv);
 
 
 /*******************************************************************************
@@ -89,6 +90,9 @@ static const shell_command_context_t xFlashWriteCommand = {"fwrite",
 static const shell_command_context_t xAppStartCommand = {"appexec",
                                                     "\r\nappexec <appStartAddr>\r\n",
 													BootAppCmd, 1};
+static const shell_command_context_t xUpdateCommand = {"update",
+                                                    "\r\nupdate\r\n",
+													UpdateCmd, 2};
 
 
 /*******************************************************************************
@@ -239,6 +243,29 @@ static int32_t BootAppCmd(p_shell_context_t context, int32_t argc, char **argv)
 	return 0;	// Pointless ...
 }
 
+
+static int32_t UpdateCmd(p_shell_context_t context, int32_t argc, char **argv)
+{
+	bool switchImgNum = false;
+	int32_t autoStart = 1;
+	bool emulateFailure = false;
+
+	if ( argc > 1 )
+		autoStart = ((int32_t)atoi(argv[1]));
+
+	if ( argc > 2 )
+	{
+		emulateFailure = ( atoi(argv[2]) != 0 );
+	}
+
+   switchImgNum = RunFwUpdate(emulateFailure);
+
+   // Set ImgNum to current(=false) or new(=true) FW:
+   SetBootImage(switchImgNum);
+
+   if ( autoStart )
+	   StartFirmware();
+}
 
 
 /*! @brief Main function */
