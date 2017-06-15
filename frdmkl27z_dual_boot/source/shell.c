@@ -45,6 +45,8 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+#define BL_VERSION_STRING	"0.1.1"
+
 #define LED_NUMBERS 3U
 #define LED_1_INIT() LED_RED_INIT(LOGIC_LED_OFF)
 #define LED_2_INIT() LED_GREEN_INIT(LOGIC_LED_OFF)
