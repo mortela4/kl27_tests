@@ -9,6 +9,13 @@
 #define FW_BOOT_H_
 
 void JumpToUserApplication(unsigned long reloadVector);
-int CheckApplicationReady(unsigned long reloadVector);
+bool CheckApplicationReady(unsigned long reloadVector);
+void SetBootImage(bool switchImage);
+void CheckResetCause(void);
+bool ResetBySW(void);
+bool RunFwUpdate(bool emulateFailure);
+void StartFirmware(void);
+uint32_t GetBootImage(void);
+void SetBootImage(bool switchImage);
 
 #endif /* FW_BOOT_H_ */

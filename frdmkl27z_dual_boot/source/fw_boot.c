@@ -10,6 +10,8 @@
 #include "board.h"
 #include "flash_cmds.h"
 #include "fsl_debug_console.h"
+//
+#include "fw_boot.h"
 
 /*
 #define FW_IMG_1_ADDR	0x6000
@@ -72,9 +74,20 @@ bool RunFwUpdate(bool emulateFailure)
 
 void StartFirmware(void)
 {
-	uint32_t fwStartAddr = FW_OFFSET + (gImgNum - 1)*FW_SZ ;
+	uint32_t fwStartAddr = 0;
 
-	if ( CheckApplicationReady() == false )
+	if ( gImgNum == 1 || gImgNum == 2 )
+	{
+		fwStartAddr = FW_OFFSET + (gImgNum - 1)*FW_SZ ;
+	}
+	else	// TODO: rather just set gImgNum=1 if invalid?
+	{
+		PRINTF("\r\nInvalid image number - cannot start!\r\n");
+
+		return;
+	}
+
+	if ( CheckApplicationReady(fwStartAddr) == false )
 	{
 		PRINTF("\r\nNo valid firmware - cannot start!\r\n");
 
@@ -84,13 +97,15 @@ void StartFirmware(void)
 	JumpToUserApplication(fwStartAddr);
 }
 
+
+// Should be called immediately after boot.
 void CheckResetCause(void)
 {
    bool switchImgNum = false;
 
    if ( ResetBySW() )
    {
-      switchImgNum = RunFwUpdate();
+      switchImgNum = RunFwUpdate(false);
    }
    // Set ImgNum to current(=false) or new(=true) FW:
    SetBootImage(switchImgNum);
@@ -101,13 +116,13 @@ void CheckResetCause(void)
 
 uint32_t GetBootImage(void)
 {
-	return (uint32_t)*(CONFIG_START);
+	return *(volatile uint32_t *)(CONFIG_START);
 }
 
 
 void SetBootImage(bool switchImage)
 {
-	gImgNum = GetBootImage();	// From Flash.
+	gImgNum = (uint8_t)GetBootImage();	// From Flash.
 
    // Illegal image-number?
    if (gImgNum == 0 || gImgNum > 2)
@@ -124,9 +139,13 @@ void SetBootImage(bool switchImage)
 		   gImgNum = 1;
    }
 
-   auto gFwStartAddr = FW_OFFSET + (gImgNum - 1)*FW_SZ;
+   // Update Flash
+   WriteFlashByte(CONFIG_START, gImgNum);
 
-   PRINTF("Image addr set to: 0x%08X", FW_START_ADDR);
+   // Informative only:
+   uint32_t gFwStartAddr = FW_OFFSET + (gImgNum - 1)*FW_SZ;
+
+   PRINTF("Image addr set to: 0x%08X", gFwStartAddr);
 }
 
 

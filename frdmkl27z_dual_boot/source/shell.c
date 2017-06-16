@@ -93,7 +93,7 @@ static const shell_command_context_t xAppStartCommand = {"appexec",
                                                     "\r\nappexec <appStartAddr>\r\n",
 													BootAppCmd, 1};
 static const shell_command_context_t xUpdateCommand = {"update",
-                                                    "\r\nupdate\r\n",
+                                                    "\r\nupdate <autostart=0|1> <emulatefail=0|1>\r\n",
 													UpdateCmd, 2};
 
 
@@ -267,6 +267,8 @@ static int32_t UpdateCmd(p_shell_context_t context, int32_t argc, char **argv)
 
    if ( autoStart )
 	   StartFirmware();
+
+   return 0;
 }
 
 
@@ -296,6 +298,8 @@ int main(void)
     SHELL_RegisterCommand(&xFlashWriteCommand);
     /* Add 'appexec' command */
     SHELL_RegisterCommand(&xAppStartCommand);
+    /* Add 'update' command */
+    SHELL_RegisterCommand(&xUpdateCommand);
 
 
     SHELL_Main(&user_context);
