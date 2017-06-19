@@ -124,23 +124,27 @@ void SetBootImage(bool switchImage)
 {
 	gImgNum = (uint8_t)GetBootImage();	// From Flash.
 
-   // Illegal image-number?
-   if (gImgNum == 0 || gImgNum > 2)
-	   gImgNum = 1;
-
    // Set StartAddr - TODO: check if ==1||==2 first!
    if ( switchImage )
    {
-	   // imgNum = (imgNum & 0x03) ^ 0x03;   // XOR 2LSBs
-	   // TODO: simplify!
+	   // imgNum = (imgNum & 0x03) ^ 0x03;   // XOR 2LSBs f.ex.
 	   if (gImgNum==1)
 		   gImgNum = 2;
-	   else
+	   else if (gImgNum==2)
 		   gImgNum = 1;
+	   // Illegal image-number?
+	   else
+	   {
+		   PRINTF("Illegal image number in Flash - forcing =1!\r\n");
+		   gImgNum = 1;
+	   }
+	   // Update Flash
+	   WriteFlashByte(CONFIG_START, gImgNum);
    }
-
-   // Update Flash
-   WriteFlashByte(CONFIG_START, gImgNum);
+   else
+   {
+	   PRINTF("Update failed - cannot switch image!\r\n");
+   }
 
    // Informative only:
    uint32_t gFwStartAddr = FW_OFFSET + (gImgNum - 1)*FW_SZ;

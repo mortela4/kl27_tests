@@ -138,8 +138,10 @@ int32_t SHELL_Main(p_shell_context_t context)
     }
 
     context->exit = false;
+    /*
     context->printf_data_func("\r\nSHELL (build: %s)\r\n", __DATE__);
-    context->printf_data_func("Copyright (c) 2015 Freescale Semiconductor\r\n");
+    context->printf_data_func("Copyright (c) 2017 7Sense AS\r\n");
+    */
     context->printf_data_func(context->prompt);
 
     while (1)

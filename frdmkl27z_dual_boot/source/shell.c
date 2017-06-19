@@ -253,11 +253,21 @@ static int32_t UpdateCmd(p_shell_context_t context, int32_t argc, char **argv)
 	bool emulateFailure = false;
 
 	if ( argc > 1 )
+	{
 		autoStart = ((int32_t)atoi(argv[1]));
+		if (autoStart)
+			SHELL_Printf("Application firmware will be started directly after update ...\r\n");
+		else
+			SHELL_Printf("Bootloader will halt after update ...\r\n");
+	}
 
-	if ( argc > 2 )
+	if ( argc == 3 )
 	{
 		emulateFailure = ( atoi(argv[2]) != 0 );
+		if (emulateFailure)
+			SHELL_Printf("Emulating update failure ...\r\n");
+		else
+			SHELL_Printf("Emulating update success ...\r\n");
 	}
 
    switchImgNum = RunFwUpdate(emulateFailure);
@@ -288,7 +298,7 @@ int main(void)
     Led_Init();
 
     /* Init SHELL */
-    SHELL_Init(&user_context, SHELL_SendDataCallback, SHELL_ReceiveDataCallback, SHELL_Printf, "SHELL>> ");
+    SHELL_Init(&user_context, SHELL_SendDataCallback, SHELL_ReceiveDataCallback, SHELL_Printf, "BOOT>> ");
 
     /* Add 'led' command to commands list */
     SHELL_RegisterCommand(&xLedCommand);
